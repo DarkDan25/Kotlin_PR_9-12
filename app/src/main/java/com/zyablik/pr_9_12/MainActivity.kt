@@ -1,5 +1,6 @@
 package com.zyablik.pr_9_12
 
+import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
@@ -44,8 +45,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.zyablik.pr_9_12.ui.theme.CustomTheme
 import kotlinx.coroutines.launch
+
+class BgProcess(context: Context, params: WorkerParameters) : Worker(context, params) {
+    override fun doWork(): Result {
+        Log.d("rrr", "Some bg thing")
+        return Result.success()
+    }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,20 +90,31 @@ fun Greeting() {
                     navController
                 )
             }
-            composable("next") { NextScreen(navController)}
+            composable("next") { NextScreen(navController) }
         }
     }
 }
 
 @Composable
 fun NextScreen(navController: NavController) {
+    val constraints = Constraints.Builder().setRequiresBatteryNotLow(true).setRequiredNetworkType(NetworkType.CONNECTED).build()
+    val workRequest = OneTimeWorkRequestBuilder<BgProcess>().setConstraints(constraints).build()
     Scaffold(Modifier.fillMaxSize()) { innerPadding ->
-        Column(Modifier.padding(innerPadding), ) {
-            Box(Modifier.fillMaxWidth().background(Color.Red)) {
+        Column(Modifier.padding(innerPadding)) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.Red)
+            ) {
                 Text(text = "Nothing to see here", color = Color.White, fontSize = 30.sp)
             }
-            Box(Modifier.fillMaxWidth().background(Color.Green)) {
-                Button(onClick = { navController.navigate("home") }) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.Green)
+            ) {
+                Button(onClick = { navController.navigate("home")
+                    WorkManager.getInstance().enqueue(workRequest)}) {
                     Text(text = "Back to home", textAlign = TextAlign.Center)
                 }
             }
