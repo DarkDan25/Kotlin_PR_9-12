@@ -40,6 +40,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.zyablik.pr_9_12.ui.theme.CustomTheme
 import kotlinx.coroutines.launch
 
@@ -48,60 +52,82 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            CustomTheme{
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                )
-                { innerPadding ->
-                    PR9(
-                        name = "Danila",
-                        surname = "Zhukov",
-                        groupp = "IKBO-12-22",
-                        modifier = Modifier.padding(innerPadding)
-                            .background(Color.Blue)
-                    )
-                }
+            CustomTheme {
+                Greeting()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun Greeting() {
+    val navController = rememberNavController()
+    Scaffold(Modifier.fillMaxSize()) { innerPadding ->
+        NavHost(
+            navController,
+            startDestination = "home",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("home") {
+                PR9(
+                    name = "Danila",
+                    surname = "Zhukov",
+                    groupp = "IKBO-12-22",
+                    navController
+                )
+            }
+            composable("next") { NextScreen(navController)}
+        }
+    }
+}
+
+@Composable
+fun NextScreen(navController: NavController) {
+    Scaffold(Modifier.fillMaxSize()) { innerPadding ->
+        Column(Modifier.padding(innerPadding), ) {
+            Box(Modifier.fillMaxWidth().background(Color.Red)) {
+                Text(text = "Nothing to see here", color = Color.White, fontSize = 30.sp)
+            }
+            Box(Modifier.fillMaxWidth().background(Color.Green)) {
+                Button(onClick = { navController.navigate("home") }) {
+                    Text(text = "Back to home", textAlign = TextAlign.Center)
+                }
+            }
+        }
+
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppBar(title: String){
+fun AppBar(title: String) {
     TopAppBar(
-        title = { Text(text = title)},
+        title = { Text(text = title) },
         Modifier.fillMaxHeight(0.05f)
     )
 }
 
 @Composable
-fun PR9(name: String, surname: String, groupp: String ,modifier: Modifier = Modifier){
-    val arr: List<String> = mutableListOf("peach","apple","tangerine","lemon","blueberry","strawberry")
-    val someText = remember {mutableStateOf("This is a card!")}
+fun PR9(name: String, surname: String, groupp: String, navController: NavController) {
+    val arr: List<String> =
+        mutableListOf("peach", "apple", "tangerine", "lemon", "blueberry", "strawberry")
+    val someText = remember { mutableStateOf("This is a card!") }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Column{
+                Column {
                     Text("Drawer title")
                     Button(
                         onClick = {
                             scope.launch {
                                 drawerState.apply {
-                                    if(isOpen) close() else open()
+                                    if (isOpen) close() else open()
                                 }
                             }
+                            navController.navigate("next")
                         }
                     ) {
                         Text("Close me!")
@@ -110,7 +136,7 @@ fun PR9(name: String, surname: String, groupp: String ,modifier: Modifier = Modi
             }
         },
         gesturesEnabled = false
-    ){
+    ) {
         Scaffold(
             topBar = {
                 AppBar(
@@ -122,14 +148,13 @@ fun PR9(name: String, surname: String, groupp: String ,modifier: Modifier = Modi
                     title = "I'm a bottom bar >:D"
                 )
             },
-            content = {
-                    innerPadding ->
+            content = { innerPadding ->
                 Modifier.padding(innerPadding)
                 Column(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.background)
                         .fillMaxHeight(0.9f)
-                ){
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
@@ -138,7 +163,7 @@ fun PR9(name: String, surname: String, groupp: String ,modifier: Modifier = Modi
                             .fillMaxWidth()
                             .fillMaxHeight(0.3f)
 
-                    ){
+                    ) {
                         Text(
                             text = "I'm $name $surname\nI'm a BIRD",
                             textAlign = TextAlign.Center
@@ -153,9 +178,9 @@ fun PR9(name: String, surname: String, groupp: String ,modifier: Modifier = Modi
                             .fillMaxHeight(0.5f)
                             .fillMaxWidth()
 
-                    ){
+                    ) {
                         LazyRow {
-                            items(arr){ item ->
+                            items(arr) { item ->
                                 Text(
                                     text = item,
                                     Modifier.padding(2.dp),
@@ -184,12 +209,13 @@ fun PR9(name: String, surname: String, groupp: String ,modifier: Modifier = Modi
                         someText.value = "You pushed FAB"
                         scope.launch {
                             drawerState.apply {
-                                Log.d("rrr",isClosed.toString())
+                                Log.d("rrr", isClosed.toString())
                                 if (isClosed) open() else close()
                             }
                         }
+
                     }
-                ) { Text("FAB")}
+                ) { Text("FAB") }
             }
         )
     }
@@ -197,11 +223,13 @@ fun PR9(name: String, surname: String, groupp: String ,modifier: Modifier = Modi
 
 }
 
-@Preview(showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO
+)
 @Composable
 fun GreetingPreview() {
     CustomTheme() {
-        PR9("Danila","Zhukov","IKBO-12-22")
+        Greeting()
     }
 }
